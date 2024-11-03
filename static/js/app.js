@@ -7,10 +7,14 @@ function buildMetadata(sample) {
     const metadata = data.metadata;
 
     // Filter the metadata for the object with the desired sample number
-    const resultArray = metadata.filter(sampleObj => sampleObj.id === sample);
+    const resultArray = metadata.filter(sampleObj => sampleObj.id == sample);
 
     // Get the first object in the filtered array (assuming there's only one match)
     const result = resultArray[0];
+    if (!result) {
+      console.error("Sample not found in metadata.");
+      return;
+    }
 
     // Use d3 to select the panel with id of `#sample-metadata`
     const panel = d3.select("#sample-metadata");
