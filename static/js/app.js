@@ -1,28 +1,31 @@
 // Build the metadata panel
 function buildMetadata(sample) {
+  // Fetch the JSON data
   d3.json("https://static.bc-edx.com/data/dl-1-2/m14/lms/starter/samples.json").then((data) => {
 
-    // get the metadata field
+    // Get the metadata field
     const metadata = data.metadata;
 
     // Filter the metadata for the object with the desired sample number
-    const sampleMetadata = metadata.find(meta => meta.id == sample);
+    const resultArray = metadata.filter(sampleObj => sampleObj.id === sample);
+
+    // Get the first object in the filtered array (assuming there's only one match)
+    const result = resultArray[0];
 
     // Use d3 to select the panel with id of `#sample-metadata`
-    const metadataPanel = d3.select("#sample-metadata");
+    const panel = d3.select("#sample-metadata");
 
-    // Use `.html("") to clear any existing metadata
-    metadataPanel.html("");
+    // Use `.html("")` to clear any existing metadata
+    panel.html("");
 
-    // Inside a loop, you will need to use d3 to append new
-    // tags for each key-value in the filtered metadata.
-    Object.entries(sampleMetadata).forEach(([key, value]) => {
-      metadataPanel.append("p").text(`${key}: ${value}`);
+    // Inside a loop, use d3 to append new tags for each key-value in the filtered metadata
+    Object.entries(result).forEach(([key, value]) => {
+      panel.append("h6").text(`${key}: ${value}`);
+    });
   });
-});
 }
 
-// function to build both charts
+// Function to build both charts
 function buildCharts(sample) {
   d3.json("https://static.bc-edx.com/data/dl-1-2/m14/lms/starter/samples.json").then((data) => {
 
@@ -30,12 +33,13 @@ function buildCharts(sample) {
     const samples = data.samples;
 
     // Filter the samples for the object with the desired sample number
-    const selectedSample = samples.find(s => s.id == sample);
+    const resultArray = samples.filter(sampleObj => sampleObj.id === sample);
 
     // Get the otu_ids, otu_labels, and sample_values
-    const otuIds = selectedSample.otu_ids;
-    const sampleValues = selectedSample.sample_values;
-    const otuLabels = selectedSample.otu_labels;
+    const result = resultArray[0];
+    const otuIds = result.otu_ids;
+    const otuLabels = result.otu_labels;
+    const sampleValues = result.sample_values;
 
     // Build a Bubble Chart
     const bubbleTrace = {
@@ -44,49 +48,45 @@ function buildCharts(sample) {
       text: otuLabels,
       mode: 'markers',
       marker: {
-          size: sampleValues,
-          color: otuIds,
-          colorscale: 'Viridis'
+        size: sampleValues,
+        color: otuIds,
+        colorscale: 'Earth'
       }
-  };
-  
-  const bubbleData = [bubbleTrace];
-  const bubbleLayout = {
-      title: 'OTU ID vs Sample Values',
-      xaxis: { title: "OTU ID" },
-      yaxis: { title: "Sample Values" },
-      showlegend: false
-  };
+    };
 
-    // Render the Bubble Chart
-    Plotly.newPlot("bubble-chart", bubbleData, bubbleLayout);
+    const bubbleData = [bubbleTrace];
+
+    const bubbleLayout = {
+      title: 'Bacteria Cultures per Sample',
+      xaxis: { title: 'OTU ID' },
+      showlegend: false,
+    };
+
+    Plotly.newPlot('bubble', bubbleData, bubbleLayout); // Render the Bubble Chart
 
     // For the Bar Chart, map the otu_ids to a list of strings for your yticks
-    const yticks = otuIds.slice(0, 10).map(id => `OTU ${id}`).reverse();
-
+    const yticks = otuIds.slice(0, 10).map(id => `OTU ${id}`);
 
     // Build a Bar Chart
-    // Don't forget to slice and reverse the input data appropriately
     const barTrace = {
-      x: sampleValues.slice(0, 10).reverse(),
+      x: sampleValues.slice(0, 10).reverse(), // Slicing and reversing
       y: yticks,
-      text: otuLabels.slice(0, 10).reverse(),
       type: 'bar',
-      orientation: 'h'
-  };
-  
-  const barData = [barTrace];
-  const barLayout = {
-      title: "Top 10 OTUs Found",
-      margin: { t: 30, l: 150 }
-  };
+      orientation: 'h',
+      text: otuLabels.slice(0, 10).reverse()
+    };
 
-    // Render the Bar Chart
-    Plotly.newPlot("bar-chart", barData, barLayout);
+    const barData = [barTrace];
+
+    const barLayout = {
+      title: 'Top 10 Bacteria Cultures Found',
+      xaxis: { title: 'Sample Values' },
+      yaxis: { title: 'OTU IDs' }
+    };
+
+    Plotly.newPlot('bar', barData, barLayout); // Render the Bar Chart
   });
 }
-
-
 // Function to run on page load
 function init() {
   d3.json("https://static.bc-edx.com/data/dl-1-2/m14/lms/starter/samples.json").then((data) => {
@@ -98,13 +98,9 @@ function init() {
     const dropdown = d3.select("#selDataset");
 
     // Use the list of sample names to populate the select options
-    // Hint: Inside a loop, you will need to use d3 to append a new
-    // option for each sample name.
     sampleNames.forEach(sample => {
-      dropdown.append("option")
-          .text(sample)
-          .property("value", sample);
-  });
+      dropdown.append("option").text(sample).property("value", sample);
+    });
 
     // Get the first sample from the list
     const firstSample = sampleNames[0];
@@ -112,7 +108,7 @@ function init() {
     // Build charts and metadata panel with the first sample
     buildCharts(firstSample);
     buildMetadata(firstSample);
-});
+  });
 }
 
 // Function for event listener
@@ -124,6 +120,3 @@ function optionChanged(newSample) {
 
 // Initialize the dashboard
 init();
-</script>
-</body>
-</html>
